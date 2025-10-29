@@ -12,12 +12,10 @@ import EmployeeDashboard from './components/dashboard/EmployeeDashboard';
 import { AuthProvider, useAuth } from './context/AuthContext'; 
 import './App.css'; 
 
-// --- Placeholder Component (Corrected Name) ---
-// This will render when you hit /admin/dashboard
+// --- Placeholder Component ---
 const AdminDashboard = () => <h2>Admin Dashboard - User Approval & Task Management</h2>;
 
 // --- Navigation Component ---
-// Uses the useAuth hook to determine which links to show
 const Navigation = () => {
     const { isAuthenticated, isAdmin, logout } = useAuth();
 
@@ -27,12 +25,15 @@ const Navigation = () => {
                 <Navbar.Brand as={Link} to="/">Daily Work Tracker</Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
-                    <Nav className="ms-auto"> {/* Use ms-auto to push links to the right */}
+                    <Nav className="ms-auto"> 
                         {isAuthenticated ? (
                             <>
-                                <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
-                                {/* FIX 1: Updated link to match the dashboard path */}
-                                {isAdmin && <Nav.Link as={Link} to="/admin/dashboard">Admin</Nav.Link>} 
+                                {/* FIX: Ensure Dashboard link goes to the correct employee path for consistency */}
+                                <Nav.Link as={Link} to="/employee/dashboard">Dashboard</Nav.Link>
+                                
+                                {/* Link for Admin is now back to /admin */}
+                                {isAdmin && <Nav.Link as={Link} to="/admin">Admin</Nav.Link>} 
+                                
                                 <Nav.Link onClick={logout} className="text-warning">Logout</Nav.Link> 
                             </>
                         ) : (
@@ -58,8 +59,8 @@ function AppContent() {
             return <Navigate to="/login" replace />;
         }
         if (requiredAdmin && !isAdmin) {
-            // Redirect non-admins away from the admin page
-            return <Navigate to="/dashboard" replace />;
+            // Redirect non-admins away from the employee page
+            return <Navigate to="/employee/dashboard" replace />;
         }
         return element;
     };
@@ -76,23 +77,26 @@ function AppContent() {
                     {/* Root path redirects based on auth state */}
                     <Route 
                         path="/" 
-                        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} 
+                        // Redirect authenticated users to their primary dashboard (Employee default)
+                        element={isAuthenticated ? <Navigate to="/employee/dashboard" replace /> : <Navigate to="/login" replace />} 
                     />
 
-                    {/* Protected Routes */}
+                    {/* Protected Routes: Employee Dashboard */}
+                    {/* FIX: Using /employee/dashboard path as defined in the Login component */}
                     <Route 
                         path="/employee/dashboard" 
                         element={<ProtectedRoute element={<EmployeeDashboard />} />} 
                     />
 
-                    {/* FIX 2 & 3: Updated path to match the login redirect, and using the new component name */}
+                    {/* Protected Routes: Admin Panel */}
+                    {/* FIX: Using the simpler /admin path. The login component will now redirect here. */}
                     <Route 
-                        path="/admin/dashboard" 
+                        path="/admin" 
                         element={<ProtectedRoute element={<AdminDashboard />} requiredAdmin={true} />} 
                     />
-
-                    {/* Default Catch-all */}
-                    <Route path="*" element={<h2>404 Not Found</h2>} />
+                    
+                    {/* Catch all other paths and redirect the user back to their dashboard (if logged in) */}
+                    <Route path="*" element={<Navigate to={isAuthenticated ? (isAdmin ? "/admin" : "/employee/dashboard") : "/login"} replace />} />
                 </Routes>
             </Container>
         </>
