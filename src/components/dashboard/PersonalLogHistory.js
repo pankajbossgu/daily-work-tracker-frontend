@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, Table, Alert, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 
-const PersonalLogHistory = ({ token, apiBaseUrl }) => {
+// NOTE: apiBaseUrl removed from props as it's not needed with the proxy setup
+const PersonalLogHistory = ({ token }) => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -13,10 +14,10 @@ const PersonalLogHistory = ({ token, apiBaseUrl }) => {
         setLoading(true);
         setError('');
         try {
-            const response = await axios.get(`${apiBaseUrl}/timelogs/user`, {
+            // FIX APPLIED: Corrected endpoint to match logRoutes.js: GET /api/logs
+            const response = await axios.get(`/api/logs`, { 
                 headers: { Authorization: `Bearer ${token}` }
             });
-            // Logs are sorted descending by log_date_time in the backend
             setLogs(response.data); 
         } catch (err) {
             console.error('Log fetch error:', err.response?.data || err.message);
@@ -34,19 +35,17 @@ const PersonalLogHistory = ({ token, apiBaseUrl }) => {
     }, [token]);
     
     // --- Helper Functions ---
-    const formatMinutesToHours = (minutes) => {
-        if (!minutes || minutes === 0) return '0h';
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        if (hours === 0) return `${mins}m`;
-        if (mins === 0) return `${hours}h`;
-        return `${hours}h ${mins}m`;
+    // Adapted to handle 'hours_logged' (float) as returned by the backend query
+    const formatHours = (hours) => {
+        if (typeof hours !== 'number' || isNaN(hours)) return '0.0h';
+        return `${hours.toFixed(1)}h`;
     };
 
     const formatDate = (dateTime) => {
         if (!dateTime) return 'N/A';
         const date = new Date(dateTime);
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        // Using toLocaleDateString() to format the date part (e.g., 10/29/2025)
+        return date.toLocaleDateString();
     };
 
     // --- Render Logic ---
@@ -67,7 +66,7 @@ const PersonalLogHistory = ({ token, apiBaseUrl }) => {
                     <Table striped bordered hover size="sm">
                         <thead>
                             <tr>
-                                <th>Date & Time</th>
+                                <th>Date</th>
                                 <th>Task</th>
                                 <th>Time Spent</th>
                                 <th>Description</th>
@@ -76,9 +75,10 @@ const PersonalLogHistory = ({ token, apiBaseUrl }) => {
                         <tbody>
                             {logs.map((log) => (
                                 <tr key={log.log_id}>
-                                    <td>{formatDate(log.log_date_time)}</td>
+                                    <td>{formatDate(log.work_date)}</td>
                                     <td>{log.task_name}</td>
-                                    <td>{formatMinutesToHours(log.time_spent_minutes)}</td>
+                                    {/* Using log.hours_logged from the backend query */}
+                                    <td>{formatHours(log.hours_logged)}</td> 
                                     <td>{log.description.substring(0, 50)}...</td>
                                 </tr>
                             ))}
