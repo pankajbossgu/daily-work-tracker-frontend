@@ -8,7 +8,8 @@ import TimeLogForm from './TimeLogForm'; // Will create this next
 import PersonalLogHistory from './PersonalLogHistory'; // Will create this next
 
 const EmployeeDashboard = () => {
-    const { user, token, apiBaseUrl } = useAuth();
+    // NOTE: apiBaseUrl is correctly defined as '' in AuthContext after proxy setup, so it resolves to http://localhost:3001
+    const { user, token } = useAuth(); // Removed apiBaseUrl as it's not needed directly here if proxy is set
     const [tasks, setTasks] = useState([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
@@ -16,23 +17,26 @@ const EmployeeDashboard = () => {
     // Function to fetch active tasks
     const fetchActiveTasks = async () => {
         try {
-            const response = await axios.get(`${apiBaseUrl}/admin/tasks/active`, {
+            // FIX APPLIED: Changed endpoint from /admin/tasks/active to the correct /api/logs/tasks
+            const response = await axios.get(`/api/logs/tasks`, { 
                 headers: { Authorization: `Bearer ${token}` }
             });
             setTasks(response.data);
         } catch (err) {
+            // Revert error message to default if needed, as the server error is now known to be fixed
             setError('Failed to load tasks. Please check server connection.');
-            console.error('Task fetch error:', err);
+            console.error('Task fetch error:', err.response?.data?.error || err.message);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        if (token) {
+        // We only fetch if the user and token exist (meaning they are logged in)
+        if (user && token) { 
             fetchActiveTasks();
         }
-    }, [token]);
+    }, [user, token]); // Added user to dependencies just in case
 
     if (loading) {
         return <Container className="mt-5"><p>Loading dashboard...</p></Container>;
@@ -51,10 +55,10 @@ const EmployeeDashboard = () => {
                     <Card className="shadow-sm">
                         <Card.Body>
                             <Card.Title className="text-primary">Submit Daily Log</Card.Title>
+                            {/* Pass only tasks and token */}
                             <TimeLogForm 
                                 tasks={tasks} 
                                 token={token} 
-                                apiBaseUrl={apiBaseUrl}
                                 onLogSuccess={() => {
                                     // Placeholder: This prop will be used to refresh log history
                                     console.log('Time log submitted, dashboard needs refresh!');
@@ -68,10 +72,10 @@ const EmployeeDashboard = () => {
                 <Col md={12} lg={6} className="mb-4">
                     <Tabs defaultActiveKey="history" id="uncontrolled-tab-example" className="mb-3">
                         <Tab eventKey="history" title="Your Log History">
+                            {/* PersonalLogHistory will need to fetch logs from /api/logs */}
                             <PersonalLogHistory 
                                 user={user} 
                                 token={token} 
-                                apiBaseUrl={apiBaseUrl} 
                             />
                         </Tab>
                         <Tab eventKey="tasks" title="Available Tasks">
