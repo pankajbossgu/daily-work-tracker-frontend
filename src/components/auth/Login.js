@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
-// Use the clean, relative path. The "proxy" setting in package.json handles forwarding this to http://localhost:3000
 const LOGIN_ENDPOINT = '/api/users/login'; 
 
 const Login = () => {
@@ -15,7 +14,6 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     
-    // We remove 'apiBaseUrl' as the proxy handles the base URL
     const { login } = useAuth(); 
     const navigate = useNavigate();
 
@@ -25,30 +23,24 @@ const Login = () => {
         setLoading(true);
 
         try {
-            // FIX APPLIED: Using the clean, proxied path: /api/users/login
             const response = await axios.post(LOGIN_ENDPOINT, { 
                 email,
                 password,
             });
 
-            // Assuming response.data contains { token, role, user_id, email, message }
             const { token, role, user_id, email: userEmail } = response.data;
             
-            // Update global state
             login(token, { user_id, email: userEmail, role });
             
-            // Navigate based on role 
+            // FIX APPLIED: Admin navigates to /admin, Employee navigates to /dashboard
             if (role === 'Admin') {
-                // FIX: Navigate to the simpler /admin route, matching the App.js route definition
                 navigate('/admin'); 
             } else {
-                // Keep the employee path consistent
                 navigate('/employee/dashboard'); 
             }
 
         } catch (err) {
             console.error('Login error:', err.response?.data || err.message);
-            // Use the specific error message from the backend if available
             setError(err.response?.data?.message || 'Failed to login. Check credentials or approval status.');
         } finally {
             setLoading(false);
