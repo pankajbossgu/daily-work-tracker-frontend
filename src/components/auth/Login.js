@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
-// --- TEMPORARY FIX: HARDCODE THE CORRECT BACKEND URL ---
-// This ensures the request hits your Node.js server running on port 3000
+// --- DEFINITIVE FIX: HARDCODE THE CORRECT BACKEND URL ---
+// This bypasses any issue with the 'apiBaseUrl' configuration.
 const LOGIN_ENDPOINT = 'http://localhost:3000/api/users/login';
 // --------------------------------------------------------
 
@@ -34,13 +34,12 @@ const Login = () => {
             });
 
             // Extract necessary data from the response payload
-            // Note: The backend now returns { token, role, user_id, email, message }
-            const { token, role, user_id, email: userEmail } = response.data;
+            const { token, role, user_id, email: userEmail, message } = response.data;
             
             // Update global state
             login(token, { user_id, email: userEmail, role });
             
-            // Navigate based on role (standard practice)
+            // Navigate based on role (recommended structure)
             if (role === 'Admin') {
                 navigate('/admin/dashboard'); 
             } else {
