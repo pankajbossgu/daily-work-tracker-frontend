@@ -1,17 +1,39 @@
 {
-  "name": "daily-work-tracker-backend",
+  "name": "daily-work-tracker-frontend",
   "version": "1.0.0",
-  "description": "Backend for Daily Work Tracker",
-  "main": "server.js",
-  "scripts": {
-    "start": "PORT=3005 node server.js"
-  },
+  "private": true,
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "pg": "^8.11.3",
-    "dotenv": "^16.3.1",
-    "jsonwebtoken": "^9.0.2",
-    "bcrypt": "^5.1.1"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.21.1",
+    "react-scripts": "5.0.1",
+    "axios": "^1.6.3",
+    "bootstrap": "^5.3.2",
+    "react-bootstrap": "^2.9.2"
+  },
+  "proxy": "http://localhost:3005",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
