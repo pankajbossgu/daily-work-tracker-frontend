@@ -1,51 +1,95 @@
-// src/components/auth/Login.js
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, Form, Button, Alert } from 'react-bootstrap';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
-export default function Login() {
+const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [err, setErr] = useState('');
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErr('');
+    setError("");
+
     try {
-      const res = await fetch('http://localhost:3005/api/users/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const res = await axios.post("http://localhost:3005/api/auth/login", {
+        email,
+        password,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Login failed');
-      login(data.user); // store user in context/localStorage
-      // redirect by role
-      if ((data.user.role || '').toLowerCase() === 'admin') navigate('/admin/dashboard');
-      else navigate('/employee/dashboard');
-    } catch (e) {
-      setErr(e.message);
+
+      if (res.data?.token && res.data?.user) {
+        // Store user and token in context + localStorage
+        login({
+          ...res.data.user,
+          token: res.data.token,
+        });
+
+        // Redirect based on role
+        if (res.data.user.role?.toLowerCase() === "admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/employee/dashboard");
+        }
+      } else {
+        setError("Invalid response from server. Please check backend.");
+      }
+    } catch (err) {
+      console.error("Login failed:", err);
+      setError(err.response?.data?.message || "Login failed. Try again.");
     }
   };
 
   return (
-    <Card className="p-4 shadow-sm">
-      <h3 className="mb-3 text-center">Login</h3>
-      {err && <Alert variant="danger">{err}</Alert>}
-      <Form onSubmit={handleSubmit}>
-        <Form.Group className="mb-2">
-          <Form.Label>Email</Form.Label>
-          <Form.Control value={email} onChange={e => setEmail(e.target.value)} type="email" required />
-        </Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label>Password</Form.Label>
-          <Form.Control value={password} onChange={e => setPassword(e.target.value)} type="password" required />
-        </Form.Group>
-        <Button type="submit" className="w-100">Login</Button>
-      </Form>
-    </Card>
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
+
+        {error && (
+          <p className="text-red-500 text-sm mb-3 text-center">{error}</p>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            className="w-full border p-2 mb-3 rounded"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            className="w-full border p-2 mb-3 rounded"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+          >
+            Login
+          </button>
+        </form>
+
+        <p className="text-center mt-4 text-sm text-gray-500">
+          Don’t have an account?{" "}
+          <span
+            className="text-blue-600 hover:underline cursor-pointer"
+            onClick={() => navigate("/register")}
+          >
+            Register
+          </span>
+        </p>
+      </div>
+    </div>
   );
-}
+};
+
+export default Login;
