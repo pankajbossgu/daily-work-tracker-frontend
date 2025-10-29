@@ -1,0 +1,100 @@
+// src/components/dashboard/EmployeeDashboard.js
+
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Card, Alert, Tab, Tabs } from 'react-bootstrap';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import TimeLogForm from './TimeLogForm'; // Will create this next
+import PersonalLogHistory from './PersonalLogHistory'; // Will create this next
+
+const EmployeeDashboard = () => {
+    const { user, token, apiBaseUrl } = useAuth();
+    const [tasks, setTasks] = useState([]);
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(true);
+
+    // Function to fetch active tasks
+    const fetchActiveTasks = async () => {
+        try {
+            const response = await axios.get(`${apiBaseUrl}/admin/tasks/active`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setTasks(response.data);
+        } catch (err) {
+            setError('Failed to load tasks. Please check server connection.');
+            console.error('Task fetch error:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (token) {
+            fetchActiveTasks();
+        }
+    }, [token]);
+
+    if (loading) {
+        return <Container className="mt-5"><p>Loading dashboard...</p></Container>;
+    }
+
+    if (error) {
+        return <Container className="mt-5"><Alert variant="danger">{error}</Alert></Container>;
+    }
+
+    return (
+        <Container className="mt-4">
+            <h1 className="mb-4">Welcome, {user?.email}!</h1>
+            <Row>
+                {/* Time Logging Section */}
+                <Col md={12} lg={6} className="mb-4">
+                    <Card className="shadow-sm">
+                        <Card.Body>
+                            <Card.Title className="text-primary">Submit Daily Log</Card.Title>
+                            <TimeLogForm 
+                                tasks={tasks} 
+                                token={token} 
+                                apiBaseUrl={apiBaseUrl}
+                                onLogSuccess={() => {
+                                    // Placeholder: This prop will be used to refresh log history
+                                    console.log('Time log submitted, dashboard needs refresh!');
+                                }}
+                            />
+                        </Card.Body>
+                    </Card>
+                </Col>
+                
+                {/* Tabs for History and Tasks */}
+                <Col md={12} lg={6} className="mb-4">
+                    <Tabs defaultActiveKey="history" id="uncontrolled-tab-example" className="mb-3">
+                        <Tab eventKey="history" title="Your Log History">
+                            <PersonalLogHistory 
+                                user={user} 
+                                token={token} 
+                                apiBaseUrl={apiBaseUrl} 
+                            />
+                        </Tab>
+                        <Tab eventKey="tasks" title="Available Tasks">
+                            <Card className="shadow-sm">
+                                <Card.Body>
+                                    <Card.Title>Active Tasks</Card.Title>
+                                    <ul>
+                                        {tasks.length > 0 ? (
+                                            tasks.map(task => (
+                                                <li key={task.task_id}>{task.task_name}</li>
+                                            ))
+                                        ) : (
+                                            <p className="text-muted">No active tasks available. Contact your administrator.</p>
+                                        )}
+                                    </ul>
+                                </Card.Body>
+                            </Card>
+                        </Tab>
+                    </Tabs>
+                </Col>
+            </Row>
+        </Container>
+    );
+};
+
+export default EmployeeDashboard;
