@@ -25,21 +25,15 @@
     ]
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
-
----
-
-## 🚀 Final Steps: The Full Restart
-
-Please follow these steps exactly. This process will unify your connection and allow the login request to finally reach your Node.js server.
-
-1.  **Save** the updated `server.js` (Port 3005) and the updated `package.json` (Proxy 3005).
-2.  **Stop both your backend and frontend servers.** (Use `Ctrl+C` in both terminals).
-3.  **Start the Backend first.** The console **must** read: `Server is listening on port 3005`.
-4.  **Start the Frontend second.**
-5.  Try logging in again.
-
-If the login works, both the login error and the task loading error (which is also a connection issue) should be fixed simultaneously.
