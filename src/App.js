@@ -12,8 +12,9 @@ import EmployeeDashboard from './components/dashboard/EmployeeDashboard';
 import { AuthProvider, useAuth } from './context/AuthContext'; 
 import './App.css'; 
 
-// --- Placeholder Components (Will be built later) ---
-const AdminPanel = () => <h2>Admin Panel - User Approval & Task Management</h2>;
+// --- Placeholder Component (Corrected Name) ---
+// This will render when you hit /admin/dashboard
+const AdminDashboard = () => <h2>Admin Dashboard - User Approval & Task Management</h2>;
 
 // --- Navigation Component ---
 // Uses the useAuth hook to determine which links to show
@@ -30,7 +31,8 @@ const Navigation = () => {
                         {isAuthenticated ? (
                             <>
                                 <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
-                                {isAdmin && <Nav.Link as={Link} to="/admin">Admin</Nav.Link>}
+                                {/* FIX 1: Updated link to match the dashboard path */}
+                                {isAdmin && <Nav.Link as={Link} to="/admin/dashboard">Admin</Nav.Link>} 
                                 <Nav.Link onClick={logout} className="text-warning">Logout</Nav.Link> 
                             </>
                         ) : (
@@ -78,8 +80,16 @@ function AppContent() {
                     />
 
                     {/* Protected Routes */}
-                    <Route path="/dashboard" element={<ProtectedRoute element={<EmployeeDashboard />} />} />
-                    <Route path="/admin" element={<ProtectedRoute element={<AdminPanel />} requiredAdmin={true} />} />
+                    <Route 
+                        path="/employee/dashboard" 
+                        element={<ProtectedRoute element={<EmployeeDashboard />} />} 
+                    />
+
+                    {/* FIX 2 & 3: Updated path to match the login redirect, and using the new component name */}
+                    <Route 
+                        path="/admin/dashboard" 
+                        element={<ProtectedRoute element={<AdminDashboard />} requiredAdmin={true} />} 
+                    />
 
                     {/* Default Catch-all */}
                     <Route path="*" element={<h2>404 Not Found</h2>} />
