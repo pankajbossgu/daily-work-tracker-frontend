@@ -1,91 +1,33 @@
-// src/components/auth/Login.js
-
-import React, { useState } from 'react';
-import { Form, Button, Card, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
-
-const LOGIN_ENDPOINT = '/api/users/login'; 
+import { useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
+import axios from "axios";
 
 const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    
-    const { login } = useAuth(); 
-    const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        try {
-            const response = await axios.post(LOGIN_ENDPOINT, { 
-                email,
-                password,
-            });
+    try {
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        email,
+        password,
+      });
 
-            const { token, role, user_id, email: userEmail } = response.data;
-            
-            login(token, { user_id, email: userEmail, role });
-            
-            // CORRECT NAVIGATION
-            if (role === 'Admin') {
-                navigate('/admin'); 
-            } else {
-                // CORRECTED PATH: Employee navigates to /employee/dashboard
-                navigate('/employee/dashboard'); 
-            }
+      const { token, user } = res.data;
 
-        } catch (err) {
-            console.error('Login error:', err.response?.data || err.message);
-            setError(err.response?.data?.message || 'Failed to login. Check credentials or approval status.');
-        } finally {
-            setLoading(false);
-        }
-    };
-    
-    return (
-        <Card className="shadow-lg p-3 mx-auto" style={{ maxWidth: '400px' }}>
-            <Card.Body>
-                <h2 className="text-center mb-4">Employee Login</h2>
-                {error && <Alert variant="danger">{error}</Alert>}
-                <Form onSubmit={handleSubmit}>
-                    <Form.Group className="mb-3" controlId="formBasicEmail">
-                        <Form.Label>Email address</Form.Label>
-                        <Form.Control 
-                            type="email" 
-                            placeholder="Enter email" 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)} 
-                            required 
-                        />
-                    </Form.Group>
+      login(token, user);
 
-                    <Form.Group className="mb-3" controlId="formBasicPassword">
-                        <Form.Label>Password</Form.Label>
-                        <Form.Control 
-                            type="password" 
-                            placeholder="Password" 
-                            value={password} 
-                            onChange={(e) => setPassword(e.target.value)} 
-                            required 
-                        />
-                    </Form.Group>
-                    
-                    <Button variant="primary" type="submit" className="w-100" disabled={loading}>
-                        {loading ? 'Logging In...' : 'Login'}
-                    </Button>
-                </Form>
-                <div className="w-100 text-center mt-3">
-                    Need an account? <a href="/register">Register Here</a>
-                </div>
-            </Card.Body>
-        </Card>
-    );
+      if (user.role === "Admin") {
+        window.location.href = "/admin/dashboard";
+      } else {
+        window.location.href = "/employee/dashboard";
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Invalid credentials");
+    }
+  };
+
+  // ... JSX for form
 };
-
-export default Login;
