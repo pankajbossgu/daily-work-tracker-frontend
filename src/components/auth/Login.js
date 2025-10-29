@@ -32,10 +32,11 @@ const Login = () => {
             
             login(token, { user_id, email: userEmail, role });
             
-            // FIX APPLIED: Admin navigates to /admin, Employee navigates to /employee/dashboard
+            // CORRECT NAVIGATION
             if (role === 'Admin') {
                 navigate('/admin'); 
             } else {
+                // CORRECTED PATH: Employee navigates to /employee/dashboard
                 navigate('/employee/dashboard'); 
             }
 
@@ -47,7 +48,6 @@ const Login = () => {
         }
     };
     
-    // ... (rest of the component)
     return (
         <Card className="shadow-lg p-3 mx-auto" style={{ maxWidth: '400px' }}>
             <Card.Body>
