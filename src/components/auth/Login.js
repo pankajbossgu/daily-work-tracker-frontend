@@ -6,13 +6,19 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
+// --- TEMPORARY FIX: HARDCODE THE CORRECT BACKEND URL ---
+// This ensures the request hits your Node.js server running on port 3000
+const LOGIN_ENDPOINT = 'http://localhost:3000/api/users/login';
+// --------------------------------------------------------
+
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     
-    const { login, apiBaseUrl } = useAuth();
+    // We remove 'apiBaseUrl' from the destructuring for this test
+    const { login } = useAuth(); 
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -21,20 +27,30 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post(`${apiBaseUrl}/users/login`, {
+            // FIX APPLIED: Using the hardcoded full URL
+            const response = await axios.post(LOGIN_ENDPOINT, { 
                 email,
                 password,
             });
 
-            // Assuming response.data contains { token, user: { id, email, role } }
-            const { token, user } = response.data;
+            // Extract necessary data from the response payload
+            // Note: The backend now returns { token, role, user_id, email, message }
+            const { token, role, user_id, email: userEmail } = response.data;
             
-            login(token, user); // Update global state and store token
-            navigate('/dashboard');
+            // Update global state
+            login(token, { user_id, email: userEmail, role });
+            
+            // Navigate based on role (standard practice)
+            if (role === 'Admin') {
+                navigate('/admin/dashboard'); 
+            } else {
+                navigate('/employee/dashboard'); 
+            }
 
         } catch (err) {
             console.error('Login error:', err.response?.data || err.message);
-            setError(err.response?.data?.error || 'Failed to login. Check credentials or approval status.');
+            // Use the specific error message from the backend if available
+            setError(err.response?.data?.message || 'Failed to login. Check credentials or approval status.');
         } finally {
             setLoading(false);
         }
