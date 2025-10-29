@@ -1,128 +1,163 @@
 // src/App.js
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, Outlet } from 'react-router-dom';
-import { Container, Navbar, Nav } from 'react-bootstrap';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  Link,
+  Outlet,
+} from "react-router-dom";
+import { Container, Navbar, Nav } from "react-bootstrap";
+
 // Authentication components
-import Login from './components/auth/Login'; 
-import Register from './components/auth/Register';
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Register";
+
 // Dashboard components
-import EmployeeDashboard from './components/dashboard/EmployeeDashboard'; 
-// NOTE: Corrected import path for your structure
-import AdminDashboard from './components/dashboard/AdminDashboard'; 
+import EmployeeDashboard from "./components/dashboard/EmployeeDashboard";
+import AdminDashboard from "./components/dashboard/AdminDashboard";
+
 // Context for global state
-import { AuthProvider, useAuth } from './context/AuthContext'; 
-import './App.css'; 
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import "./App.css";
 
-// --- Navigation Component ---
+// -------------------- Navigation --------------------
 const Navigation = () => {
-    const { isAuthenticated, isAdmin, logout } = useAuth();
-    const dashboardPath = isAdmin ? '/admin' : '/employee/dashboard';
+  const { isAuthenticated, user, logout } = useAuth();
+  const isAdmin = user?.role === "Admin";
+  const dashboardPath = isAdmin ? "/admin/dashboard" : "/employee/dashboard";
 
-    return (
-        <Navbar bg="dark" variant="dark" expand="lg" className="shadow-sm">
-            <Container>
-                <Navbar.Brand as={Link} to="/">Daily Work Tracker</Navbar.Brand>
-                <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                <Navbar.Collapse id="basic-navbar-nav">
-                    <Nav className="ms-auto"> 
-                        {isAuthenticated ? (
-                            <>
-                                <Nav.Link as={Link} to={dashboardPath}>Dashboard</Nav.Link>
-                                {isAdmin && <Nav.Link as={Link} to="/admin">Admin</Nav.Link>} 
-                                <Nav.Link onClick={logout} className="text-warning">Logout</Nav.Link> 
-                            </>
-                        ) : (
-                            <>
-                                <Nav.Link as={Link} to="/login">Login</Nav.Link>
-                                <Nav.Link as={Link} to="/register">Register</Nav.Link>
-                            </>
-                        )}
-                    </Nav>
-                </Navbar.Collapse>
-            </Container>
-        </Navbar>
-    );
+  return (
+    <Navbar bg="dark" variant="dark" expand="lg" className="shadow-sm">
+      <Container>
+        <Navbar.Brand as={Link} to="/">
+          Daily Work Tracker
+        </Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="ms-auto">
+            {isAuthenticated ? (
+              <>
+                <Nav.Link as={Link} to={dashboardPath}>
+                  Dashboard
+                </Nav.Link>
+                {isAdmin && (
+                  <Nav.Link as={Link} to="/admin/dashboard">
+                    Admin
+                  </Nav.Link>
+                )}
+                <Nav.Link onClick={logout} className="text-warning">
+                  Logout
+                </Nav.Link>
+              </>
+            ) : (
+              <>
+                <Nav.Link as={Link} to="/login">
+                  Login
+                </Nav.Link>
+                <Nav.Link as={Link} to="/register">
+                  Register
+                </Nav.Link>
+              </>
+            )}
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
+  );
 };
 
-// --- App Content with Routing Logic ---
-function AppContent() {
-    const { isAuthenticated, isAdmin } = useAuth();
-    
-    // Component to protect routes based on auth status and role
-    const ProtectedRoute = ({ requiredAdmin = false }) => {
-        // 1. If not authenticated, redirect to login
-        if (!isAuthenticated) {
-            return <Navigate to="/login" replace />;
-        }
-        
-        // 2. If admin is required and user ISN'T admin, redirect to employee dashboard
-        if (requiredAdmin && !isAdmin) {
-            return <Navigate to="/employee/dashboard" replace />;
-        }
-        
-        // 3. CRITICAL FIX: If this is the employee route AND the user IS an admin, redirect to /admin
-        if (!requiredAdmin && isAdmin) {
-             return <Navigate to="/admin" replace />;
-        }
+// -------------------- ProtectedRoute Wrapper --------------------
+function ProtectedRoute({ requiredAdmin = false }) {
+  const { isAuthenticated, user } = useAuth();
+  const isAdmin = user?.role === "Admin";
 
-        return <Outlet />;
-    };
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-    return (
-        <>
-            <Navigation />
-            <Container className="mt-4"> 
-                <Routes>
-                    {/* Public Routes */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    
-                    {/* Root path redirection */}
-                    <Route 
-                        path="/" 
-                        element={
-                            isAuthenticated 
-                            ? <Navigate to={isAdmin ? "/admin" : "/employee/dashboard"} replace /> 
-                            : <Navigate to="/login" replace />
-                        } 
-                    />
+  if (requiredAdmin && !isAdmin)
+    return <Navigate to="/employee/dashboard" replace />;
 
-                    {/* PROTECTED ROUTES */}
-                    
-                    {/* 1. EMPLOYEE DASHBOARD */}
-                    <Route element={<ProtectedRoute requiredAdmin={false} />}>
-                        <Route 
-                            path="/employee/dashboard" 
-                            element={<EmployeeDashboard />} 
-                        />
-                    </Route>
+  if (!requiredAdmin && isAdmin)
+    return <Navigate to="/admin/dashboard" replace />;
 
-                    {/* 2. ADMIN PANEL */}
-                    <Route element={<ProtectedRoute requiredAdmin={true} />}>
-                        <Route 
-                            path="/admin" 
-                            element={<AdminDashboard />} 
-                        />
-                    </Route>
-                    
-                    {/* Catch-all route */}
-                    <Route path="*" element={<Navigate to={isAuthenticated ? (isAdmin ? "/admin" : "/employee/dashboard") : "/login"} replace />} />
-                </Routes>
-            </Container>
-        </>
-    );
+  return <Outlet />;
 }
 
+// -------------------- App Content --------------------
+function AppContent() {
+  const { isAuthenticated, user } = useAuth();
+  const isAdmin = user?.role === "Admin";
 
+  return (
+    <>
+      <Navigation />
+      <Container className="mt-4">
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Root path redirection */}
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? (
+                <Navigate
+                  to={isAdmin ? "/admin/dashboard" : "/employee/dashboard"}
+                  replace
+                />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+
+          {/* Employee Dashboard */}
+          <Route element={<ProtectedRoute requiredAdmin={false} />}>
+            <Route
+              path="/employee/dashboard"
+              element={<EmployeeDashboard />}
+            />
+          </Route>
+
+          {/* Admin Dashboard */}
+          <Route element={<ProtectedRoute requiredAdmin={true} />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          </Route>
+
+          {/* Fallback */}
+          <Route
+            path="*"
+            element={
+              <Navigate
+                to={
+                  isAuthenticated
+                    ? isAdmin
+                      ? "/admin/dashboard"
+                      : "/employee/dashboard"
+                    : "/login"
+                }
+                replace
+              />
+            }
+          />
+        </Routes>
+      </Container>
+    </>
+  );
+}
+
+// -------------------- Root App --------------------
 function App() {
-    return (
-        <Router>
-            <AuthProvider> 
-                <AppContent />
-            </AuthProvider>
-        </Router>
-    );
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
+  );
 }
 
 export default App;
