@@ -8,13 +8,11 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 // Dashboard component
 import EmployeeDashboard from './components/dashboard/EmployeeDashboard'; 
+// *** MODIFIED: Import the real AdminDashboard component ***
+import AdminDashboard from './components/dashboard/AdminDashboard'; 
 // Context for global state
 import { AuthProvider, useAuth } from './context/AuthContext'; 
 import './App.css'; 
-
-// --- Placeholder Component ---
-// Renamed for clarity, and it renders the Admin Dashboard content
-const AdminDashboard = () => <h2>Admin Dashboard - User Approval & Task Management</h2>;
 
 // --- Navigation Component ---
 const Navigation = () => {
@@ -97,6 +95,7 @@ function AppContent() {
                     {/* Protected Routes: Admin Panel */}
                     <Route 
                         path="/admin" 
+                        // No change here, we just changed what AdminDashboard is defined as
                         element={<ProtectedRoute element={<AdminDashboard />} requiredAdmin={true} />} 
                     />
                     
