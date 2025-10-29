@@ -1,12 +1,14 @@
-// src/components/dashboard/AdminDashboard.jsx
+// src/components/dashboard/AdminDashboard.js
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext"; // ✅ fixed import
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
-  const { user, token, isAuthenticated, logout } = useContext(AuthContext);
+  // ✅ Use custom hook from AuthContext
+  const { user, token, isAuthenticated, logout } = useAuth();
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -50,6 +52,7 @@ const AdminDashboard = () => {
 
   // ----------------- Render -----------------
   if (loading) return <div className="p-8 text-gray-500">Loading users...</div>;
+
   if (error)
     return (
       <div className="p-8 text-red-500">
@@ -60,9 +63,7 @@ const AdminDashboard = () => {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-700">
-          👑 Admin Dashboard
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-700">👑 Admin Dashboard</h2>
         <button
           onClick={handleLogout}
           className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
