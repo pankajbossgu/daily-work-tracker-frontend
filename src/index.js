@@ -1,10 +1,10 @@
-// src/index.js
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App'; // Import the main component
+// MANDATORY: This line imports the necessary Bootstrap CSS styles
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './index.css';
+import App from './App';
 
-// Use the new React 18 createRoot API to render the app
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
