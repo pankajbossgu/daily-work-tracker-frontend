@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { Form, Button, Alert, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
 
-const TimeLogForm = ({ tasks, token, apiBaseUrl, onLogSuccess }) => {
+// NOTE: apiBaseUrl removed from props as it's not needed with the proxy setup
+const TimeLogForm = ({ tasks, token, onLogSuccess }) => {
     const [task, setTask] = useState('');
     const [timeSpent, setTimeSpent] = useState(''); // Time in hours
     const [description, setDescription] = useState('');
@@ -23,9 +24,10 @@ const TimeLogForm = ({ tasks, token, apiBaseUrl, onLogSuccess }) => {
             return;
         }
 
-        const timeInMinutes = parseFloat(timeSpent) * 60;
+        // We will send timeSpent directly as a float for clarity
+        const hoursLogged = parseFloat(timeSpent);
 
-        if (isNaN(timeInMinutes) || timeInMinutes <= 0) {
+        if (isNaN(hoursLogged) || hoursLogged <= 0) {
             setError('Please enter a valid time spent in hours (e.g., 2.5).');
             return;
         }
@@ -33,9 +35,10 @@ const TimeLogForm = ({ tasks, token, apiBaseUrl, onLogSuccess }) => {
         setLoading(true);
 
         try {
-            await axios.post(`${apiBaseUrl}/timelogs`, {
+            // FIX APPLIED: Corrected endpoint to match logRoutes.js: POST /api/logs/log
+            await axios.post(`/api/logs/log`, {
                 task_id: parseInt(task), // Task ID from the dropdown
-                time_spent_minutes: timeInMinutes,
+                hours_logged: hoursLogged,
                 description,
             }, {
                 headers: { Authorization: `Bearer ${token}` }
