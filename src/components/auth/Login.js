@@ -1,33 +1,79 @@
-import { useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
-import axios from "axios";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Form, Button, Alert, Card } from "react-bootstrap";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
-  const { login } = useContext(AuthContext);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        email,
-        password,
+      const response = await fetch("http://localhost:3005/api/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
-      const { token, user } = res.data;
+      const data = await response.json();
 
-      login(token, user);
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
 
-      if (user.role === "Admin") {
-        window.location.href = "/admin/dashboard";
+      // Save in context
+      login(data.user);
+
+      // Redirect based on role
+      if (data.user.role === "admin") {
+        navigate("/admin");
       } else {
-        window.location.href = "/employee/dashboard";
+        navigate("/employee/dashboard");
       }
     } catch (err) {
-      console.error(err);
-      alert("Invalid credentials");
+      setError(err.message);
     }
   };
 
-  // ... JSX for form
+  return (
+    <Card className="p-4 shadow-sm">
+      <h3 className="mb-3 text-center">Login</h3>
+      {error && <Alert variant="danger">{error}</Alert>}
+      <Form onSubmit={handleSubmit}>
+        <Form.Group className="mb-3">
+          <Form.Label>Email:</Form.Label>
+          <Form.Control
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            required
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-3">
+          <Form.Label>Password:</Form.Label>
+          <Form.Control
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter password"
+            required
+          />
+        </Form.Group>
+
+        <Button type="submit" variant="primary" className="w-100">
+          Login
+        </Button>
+      </Form>
+    </Card>
+  );
 };
+
+export default Login;
