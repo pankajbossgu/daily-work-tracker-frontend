@@ -6,10 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
-// --- DEFINITIVE FIX: HARDCODE THE CORRECT BACKEND URL ---
-// This bypasses any issue with the 'apiBaseUrl' configuration.
-const LOGIN_ENDPOINT = 'http://localhost:3000/api/users/login';
-// --------------------------------------------------------
+// Use the clean, relative path. The "proxy" setting in package.json handles forwarding this to http://localhost:3000
+const LOGIN_ENDPOINT = '/api/users/login'; 
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -17,7 +15,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     
-    // We remove 'apiBaseUrl' from the destructuring for this test
+    // We remove 'apiBaseUrl' as the proxy handles the base URL
     const { login } = useAuth(); 
     const navigate = useNavigate();
 
@@ -27,19 +25,19 @@ const Login = () => {
         setLoading(true);
 
         try {
-            // FIX APPLIED: Using the hardcoded full URL
+            // FIX APPLIED: Using the clean, proxied path: /api/users/login
             const response = await axios.post(LOGIN_ENDPOINT, { 
                 email,
                 password,
             });
 
-            // Extract necessary data from the response payload
-            const { token, role, user_id, email: userEmail, message } = response.data;
+            // Assuming response.data contains { token, role, user_id, email, message }
+            const { token, role, user_id, email: userEmail } = response.data;
             
             // Update global state
             login(token, { user_id, email: userEmail, role });
             
-            // Navigate based on role (recommended structure)
+            // Navigate based on role 
             if (role === 'Admin') {
                 navigate('/admin/dashboard'); 
             } else {
