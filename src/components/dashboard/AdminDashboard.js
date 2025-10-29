@@ -2,23 +2,20 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "../../context/AuthContext"; // ✅ fixed import
+import { useAuth } from "../../context/AuthContext"; // ✅ useAuth instead of AuthContext
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
-  // ✅ Use custom hook from AuthContext
-  const { user, token, isAuthenticated, logout } = useAuth();
-
+  const { user, isAuthenticated, logout } = useAuth(); // ✅ use useAuth
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // ----------------- Fetch users -----------------
   const fetchUsers = async () => {
     try {
       const res = await axios.get("http://localhost:3005/api/admin/users", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${user?.token}` },
       });
       setUsers(res.data);
     } catch (err) {
@@ -29,14 +26,13 @@ const AdminDashboard = () => {
     }
   };
 
-  // ----------------- Auth + Role Check -----------------
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
       return;
     }
 
-    if (user?.role !== "Admin") {
+    if (user?.role?.toLowerCase() !== "admin") {
       navigate("/employee/dashboard");
       return;
     }
@@ -44,15 +40,12 @@ const AdminDashboard = () => {
     fetchUsers();
   }, [isAuthenticated, user]);
 
-  // ----------------- Logout -----------------
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  // ----------------- Render -----------------
   if (loading) return <div className="p-8 text-gray-500">Loading users...</div>;
-
   if (error)
     return (
       <div className="p-8 text-red-500">
