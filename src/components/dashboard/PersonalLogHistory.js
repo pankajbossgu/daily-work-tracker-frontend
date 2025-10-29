@@ -35,8 +35,9 @@ const PersonalLogHistory = ({ token }) => {
     }, [token]);
     
     // --- Helper Functions ---
-    // Adapted to handle 'hours_logged' (float) as returned by the backend query
-    const formatHours = (hours) => {
+    // NEW FIX: Now expects duration in MINUTES and converts to HOURS for display
+    const formatHours = (minutes) => {
+        const hours = minutes / 60.0;
         if (typeof hours !== 'number' || isNaN(hours)) return '0.0h';
         return `${hours.toFixed(1)}h`;
     };
@@ -77,8 +78,8 @@ const PersonalLogHistory = ({ token }) => {
                                 <tr key={log.log_id}>
                                     <td>{formatDate(log.work_date)}</td>
                                     <td>{log.task_name}</td>
-                                    {/* Using log.hours_logged from the backend query */}
-                                    <td>{formatHours(log.hours_logged)}</td> 
+                                    {/* CRITICAL FIX: Reading the correct property and converting minutes to hours */}
+                                    <td>{formatHours(log.durationminutes)}</td> 
                                     <td>{log.description.substring(0, 50)}...</td>
                                 </tr>
                             ))}
