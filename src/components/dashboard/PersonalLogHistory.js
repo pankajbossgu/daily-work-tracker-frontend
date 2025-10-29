@@ -91,21 +91,3 @@ const PersonalLogHistory = ({ token, apiBaseUrl }) => {
 };
 
 export default PersonalLogHistory;
-```
-4.  Add a commit message (e.g., **`Feat: Create PersonalLogHistory component`**) and click **"Commit new file."**
-
----
-
-## 3. Restart the Frontend Server
-
-Now that all three dashboard components (`EmployeeDashboard`, `TimeLogForm`, `PersonalLogHistory`) exist, the compilation should succeed.
-
-1.  **Stop the Frontend Server:** In the CMD window running the frontend, press **`Ctrl + C`**.
-2.  **Run Git Pull:** Since you created the files on GitHub, you need to pull them locally again.
-    ```bash
-    git pull
-    ```
-3.  **Start the Server:**
-    ```bash
-    npx react-scripts start
-    
