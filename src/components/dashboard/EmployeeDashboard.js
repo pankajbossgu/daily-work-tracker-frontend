@@ -22,7 +22,7 @@ const EmployeeDashboard = () => {
             });
             setTasks(response.data);
         } catch (err) {
-            // Updated error message to be more informative
+            // Error message updated to reflect potential proxy/backend issues
             setError('Failed to load tasks. Please ensure the backend is running and the API is accessible.');
             console.error('Task fetch error:', err.response?.data?.error || err.message);
         } finally {
