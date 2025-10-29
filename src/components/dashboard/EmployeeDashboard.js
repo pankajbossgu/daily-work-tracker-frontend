@@ -8,7 +8,6 @@ import TimeLogForm from './TimeLogForm';
 import PersonalLogHistory from './PersonalLogHistory'; 
 
 const EmployeeDashboard = () => {
-    // NOTE: Removed apiBaseUrl from destructuring. Axios will use the proxy ('/api') correctly.
     const { user, token } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [error, setError] = useState('');
@@ -23,7 +22,8 @@ const EmployeeDashboard = () => {
             });
             setTasks(response.data);
         } catch (err) {
-            setError('Failed to load tasks. Please ensure the backend is running and you are approved.');
+            // Updated error message to be more informative
+            setError('Failed to load tasks. Please ensure the backend is running and the API is accessible.');
             console.error('Task fetch error:', err.response?.data?.error || err.message);
         } finally {
             setLoading(false);
@@ -48,17 +48,14 @@ const EmployeeDashboard = () => {
         <Container className="mt-4">
             <h1 className="mb-4">Welcome, {user?.email}!</h1>
             <Row>
-                {/* Time Logging Section */}
                 <Col md={12} lg={6} className="mb-4">
                     <Card className="shadow-sm">
                         <Card.Body>
                             <Card.Title className="text-primary">Submit Daily Log</Card.Title>
-                            {/* NOTE: apiBaseUrl is no longer passed as prop, rely on proxy in child components */}
                             <TimeLogForm 
                                 tasks={tasks} 
                                 token={token} 
                                 onLogSuccess={() => {
-                                    // Placeholder: This prop will be used to refresh log history
                                     console.log('Time log submitted, dashboard needs refresh!');
                                 }}
                             />
@@ -66,11 +63,9 @@ const EmployeeDashboard = () => {
                     </Card>
                 </Col>
                 
-                {/* Tabs for History and Tasks */}
                 <Col md={12} lg={6} className="mb-4">
                     <Tabs defaultActiveKey="history" id="uncontrolled-tab-example" className="mb-3">
                         <Tab eventKey="history" title="Your Log History">
-                            {/* NOTE: apiBaseUrl removed from props */}
                             <PersonalLogHistory 
                                 user={user} 
                                 token={token} 
