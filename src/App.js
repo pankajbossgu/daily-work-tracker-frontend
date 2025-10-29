@@ -1,15 +1,14 @@
 // src/App.js
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, Outlet } from 'react-router-dom';
 import { Container, Navbar, Nav } from 'react-bootstrap';
 // Authentication components
 import Login from './components/auth/Login'; 
 import Register from './components/auth/Register';
-// Dashboard component
+// Dashboard components
 import EmployeeDashboard from './components/dashboard/EmployeeDashboard'; 
-// *** MODIFIED: Import the real AdminDashboard component ***
-import AdminDashboard from './components/dashboard/AdminDashboard'; 
+import AdminDashboard from './pages/AdminDashboard'; // Assuming you moved this to /pages/
 // Context for global state
 import { AuthProvider, useAuth } from './context/AuthContext'; 
 import './App.css'; 
@@ -19,6 +18,7 @@ const Navigation = () => {
     const { isAuthenticated, isAdmin, logout } = useAuth();
 
     // Determine the dashboard link based on role
+    // This is for the NavBar link itself
     const dashboardPath = isAdmin ? '/admin' : '/employee/dashboard';
 
     return (
@@ -56,15 +56,25 @@ function AppContent() {
     const { isAuthenticated, isAdmin } = useAuth();
     
     // Component to protect routes based on auth status and role
-    const ProtectedRoute = ({ element, requiredAuth = true, requiredAdmin = false }) => {
-        if (requiredAuth && !isAuthenticated) {
+    const ProtectedRoute = ({ requiredAdmin = false }) => {
+        // If not authenticated, redirect to login (highest priority check)
+        if (!isAuthenticated) {
             return <Navigate to="/login" replace />;
         }
+        
+        // If admin is required and user ISN'T admin, redirect to employee dashboard
         if (requiredAdmin && !isAdmin) {
-            // Redirect non-admins away from the admin page
             return <Navigate to="/employee/dashboard" replace />;
         }
-        return element;
+        
+        // If requiredAdmin is FALSE (i.e., this is the employee route) 
+        // AND the user IS an admin, redirect them to the admin dashboard
+        if (!requiredAdmin && isAdmin) {
+             return <Navigate to="/admin" replace />;
+        }
+
+        // Otherwise, the user is authorized for this path, render the child route
+        return <Outlet />;
     };
 
     return (
@@ -76,30 +86,42 @@ function AppContent() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     
-                    {/* Root path redirects based on auth state */}
+                    {/* Root path redirection: 
+                        If authenticated, send to their respective dashboard.
+                        If not, send to login.
+                    */}
                     <Route 
                         path="/" 
-                        // Default redirection logic for logged in users
-                        element={isAuthenticated 
+                        element={
+                            isAuthenticated 
                             ? <Navigate to={isAdmin ? "/admin" : "/employee/dashboard"} replace /> 
                             : <Navigate to="/login" replace />
                         } 
                     />
 
-                    {/* Protected Routes: Employee Dashboard */}
-                    <Route 
-                        path="/employee/dashboard" 
-                        element={<ProtectedRoute element={<EmployeeDashboard />} />} 
-                    />
+                    {/* ----------------------------------------------------- */}
+                    {/* Protected Routes (using the Outlet pattern) */}
+                    {/* ----------------------------------------------------- */}
 
-                    {/* Protected Routes: Admin Panel */}
-                    <Route 
-                        path="/admin" 
-                        // No change here, we just changed what AdminDashboard is defined as
-                        element={<ProtectedRoute element={<AdminDashboard />} requiredAdmin={true} />} 
-                    />
+                    {/* 1. EMPLOYEE DASHBOARD (Not requiredAdmin) */}
+                    {/* The logic inside ProtectedRoute will auto-redirect an Admin away from this route. */}
+                    <Route element={<ProtectedRoute requiredAdmin={false} />}>
+                        <Route 
+                            path="/employee/dashboard" 
+                            element={<EmployeeDashboard />} 
+                        />
+                    </Route>
+
+                    {/* 2. ADMIN PANEL (Required Admin) */}
+                    {/* This route is ONLY rendered if the user is both authenticated AND isAdmin is true. */}
+                    <Route element={<ProtectedRoute requiredAdmin={true} />}>
+                        <Route 
+                            path="/admin" 
+                            element={<AdminDashboard />} 
+                        />
+                    </Route>
                     
-                    {/* Catch-all route to redirect back to login or their respective dashboard */}
+                    {/* Catch-all route for unknown paths */}
                     <Route path="*" element={<Navigate to={isAuthenticated ? (isAdmin ? "/admin" : "/employee/dashboard") : "/login"} replace />} />
                 </Routes>
             </Container>
