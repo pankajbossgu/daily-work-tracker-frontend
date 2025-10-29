@@ -1,87 +1,110 @@
-// src/components/auth/Register.js
-
-import React, { useState } from 'react';
-import { Form, Button, Card, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [message, setMessage] = useState('');
-    const [loading, setLoading] = useState(false);
-    
-    const { apiBaseUrl } = useAuth();
-    const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "Employee",
+  });
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setMessage('');
-        setLoading(true);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-        try {
-            await axios.post(`${apiBaseUrl}/users/register`, {
-                email,
-                password,
-            });
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
-            setMessage('Registration successful! Please wait for an administrator to approve your account.');
-            // Optionally redirect after a delay
-            setTimeout(() => navigate('/login'), 5000); 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-        } catch (err) {
-            console.error('Registration error:', err.response?.data || err.message);
-            setError(err.response?.data?.error || 'Registration failed. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
+    try {
+      const res = await axios.post(
+        "http://localhost:3005/api/auth/register",
+        formData
+      );
 
-    return (
-        <Card className="shadow-lg p-3 mx-auto" style={{ maxWidth: '400px' }}>
-            <Card.Body>
-                <h2 className="text-center mb-4">Employee Registration</h2>
-                {error && <Alert variant="danger">{error}</Alert>}
-                {message && <Alert variant="success">{message}</Alert>}
-                <Form onSubmit={handleSubmit}>
-                    <Form.Group className="mb-3" controlId="formBasicEmail">
-                        <Form.Label>Email address</Form.Label>
-                        <Form.Control 
-                            type="email" 
-                            placeholder="Enter email" 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)} 
-                            required 
-                        />
-                    </Form.Group>
+      if (res.status === 201 || res.data?.message?.includes("success")) {
+        alert("✅ Registration successful! Please login.");
+        navigate("/login");
+      } else {
+        setError(res.data?.message || "Unexpected response from server.");
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+      setError(err.response?.data?.message || "Registration failed.");
+    }
+  };
 
-                    <Form.Group className="mb-3" controlId="formBasicPassword">
-                        <Form.Label>Password</Form.Label>
-                        <Form.Control 
-                            type="password" 
-                            placeholder="Password" 
-                            value={password} 
-                            onChange={(e) => setPassword(e.target.value)} 
-                            required 
-                        />
-                        <Form.Text className="text-muted">
-                            Your account requires admin approval before you can log in.
-                        </Form.Text>
-                    </Form.Group>
-                    
-                    <Button variant="success" type="submit" className="w-100" disabled={loading}>
-                        {loading ? 'Registering...' : 'Register'}
-                    </Button>
-                </Form>
-                <div className="w-100 text-center mt-3">
-                    Already have an account? <a href="/login">Login Here</a>
-                </div>
-            </Card.Body>
-        </Card>
-    );
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 className="text-2xl font-bold mb-4 text-center">Register</h2>
+        {error && (
+          <p className="text-red-500 text-sm mb-3 text-center">{error}</p>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="name"
+            placeholder="Full Name"
+            className="w-full border p-2 mb-3 rounded"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            className="w-full border p-2 mb-3 rounded"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            className="w-full border p-2 mb-3 rounded"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+
+          <select
+            name="role"
+            className="w-full border p-2 mb-3 rounded"
+            value={formData.role}
+            onChange={handleChange}
+          >
+            <option value="Employee">Employee</option>
+            <option value="Admin">Admin</option>
+          </select>
+
+          <button
+            type="submit"
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
+          >
+            Register
+          </button>
+        </form>
+
+        <p className="text-center mt-4 text-sm text-gray-500">
+          Already have an account?{" "}
+          <span
+            className="text-blue-600 hover:underline cursor-pointer"
+            onClick={() => navigate("/login")}
+          >
+            Login
+          </span>
+        </p>
+      </div>
+    </div>
+  );
 };
 
 export default Register;
