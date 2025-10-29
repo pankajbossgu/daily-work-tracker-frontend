@@ -39,8 +39,10 @@ const Login = () => {
             
             // Navigate based on role 
             if (role === 'Admin') {
-                navigate('/admin/dashboard'); 
+                // FIX: Navigate to the simpler /admin route, matching the App.js route definition
+                navigate('/admin'); 
             } else {
+                // Keep the employee path consistent
                 navigate('/employee/dashboard'); 
             }
 
